@@ -155,11 +155,10 @@ export default function ShiftCalendar() {
       <CardContent className="px-4">
         <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} month={month} onMonthChange={setMonth} className="bg-transparent p-0" locale={nb} showOutsideDays={false} components={{
           DayButton: ({ children, modifiers, day, ...props }) => {
-          const isWeekend = day.date.getDay() === 0 || day.date.getDay() === 6 // TODO fjern denne
           return (
             <CalendarDayButton day={day} modifiers={modifiers} {...props} className="w-20 h-20 p-2">
               {children}
-              {shiftExists(day.date.getDate()) && <span>{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.startTime ?? 0)}-{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.endTime ?? 0)}</span>}
+              {(shiftExists(day.date.getDate()) && (getShift(day.date.getDate())!.endTime - getShift(day.date.getDate())!.startTime) > 0) && <span>{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.startTime ?? 0)}-{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.endTime ?? 0)}</span>}
             </CalendarDayButton>
           )
         },
@@ -176,7 +175,7 @@ export default function ShiftCalendar() {
                 id="time-from"
                 type="time"
                 step="60"
-                defaultValue="00:00"
+                value={shiftExists(getDayKey()) ? formatTime(getShift(getDayKey())!.startTime) : "00:00"}
                 onChange={e => updateShiftStart(e.target.value)}
                 className="appearance-none pl-8 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
@@ -190,7 +189,7 @@ export default function ShiftCalendar() {
                 id="time-to"
                 type="time"
                 step="60"
-                defaultValue="00:00"
+                value={shiftExists(getDayKey()) ? formatTime(getShift(getDayKey())!.endTime) : "00:00"}
                 onChange={e => updateShiftEnd(e.target.value)}
                 className="appearance-none pl-8 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
