@@ -48,7 +48,7 @@ export default function ShiftCalendar() {
 
   function getMonthKey()
   {
-    return (month.getMonth() + 1).toString + month.getFullYear().toString();
+    return (month.getMonth() + 1).toString() + month.getFullYear().toString();
   }
 
   function getDayKey()
