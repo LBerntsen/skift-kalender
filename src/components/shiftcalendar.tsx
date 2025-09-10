@@ -56,30 +56,9 @@ export default function ShiftCalendar() {
     return selectedDate?.getDate() ?? -1;
   }
 
-  function shiftExists(aDay: number)
+  function getShift(aDay: number): Shift | undefined
   {
-    let shiftMonth = shifts.get(getMonthKey());
-    if(shiftMonth)
-    {
-      let shift = shiftMonth.get(aDay);
-      if(shift)
-        return true;
-    }
-
-    return false;
-  }
-
-  function getShift(aDay: number)
-  {
-    let shiftMonth = shifts.get(getMonthKey());
-    if(shiftMonth)
-    {
-      let shift = shiftMonth.get(aDay);
-      if(shift)
-        return shift;
-    }
-
-    return null;
+    return shifts.get(getMonthKey())?.get(aDay);
   }
 
   function updateShiftStart(aTime: string)
@@ -155,18 +134,26 @@ export default function ShiftCalendar() {
       <CardContent className="px-4">
         <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} month={month} onMonthChange={setMonth} className="bg-transparent p-0" locale={nb} showOutsideDays={false} components={{
           DayButton: ({ children, modifiers, day, ...props }) => {
-          return (
-            <CalendarDayButton day={day} modifiers={modifiers} {...props} className="w-20 h-20 p-2">
-              {children}
-              {(shiftExists(day.date.getDate()) && (getShift(day.date.getDate())!.endTime - getShift(day.date.getDate())!.startTime) > 0) && <span>{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.startTime ?? 0)}-{shiftExists(day.date.getDate()) && formatTime(getShift(day.date.getDate())?.endTime ?? 0)}</span>}
-            </CalendarDayButton>
-          )
+            const shift = getShift(day.date.getDate());
+            return (
+              <CalendarDayButton day={day} modifiers={modifiers} {...props} className="w-20 h-20 p-2">
+                {children}
+                {(shift && shift.endTime - shift.startTime > 0) && <span>{formatTime(shift.startTime)}-{formatTime(shift.endTime)}</span>}
+              </CalendarDayButton>
+            )
         },
         }}
         />
       </CardContent>
-      {selectedDate && (
-        <CardFooter className="flex flex-col gap-6 border-t px-4 !pt-4">
+      {selectedDate && ShiftEditor()}
+    </Card>
+  )
+
+  function ShiftEditor()
+  {
+    const shift = getShift(getDayKey());
+    return (
+      <CardFooter className="flex flex-col gap-6 border-t px-4 !pt-4">
           <div className="flex w-full flex-col gap-3">
             <Label htmlFor="time-from">Start Time</Label>
             <div className="relative flex w-full items-center gap-2">
@@ -175,7 +162,7 @@ export default function ShiftCalendar() {
                 id="time-from"
                 type="time"
                 step="60"
-                value={shiftExists(getDayKey()) ? formatTime(getShift(getDayKey())!.startTime) : "00:00"}
+                value={shift ? formatTime(shift.startTime) : "00:00"}
                 onChange={e => updateShiftStart(e.target.value)}
                 className="appearance-none pl-8 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
@@ -189,14 +176,13 @@ export default function ShiftCalendar() {
                 id="time-to"
                 type="time"
                 step="60"
-                value={shiftExists(getDayKey()) ? formatTime(getShift(getDayKey())!.endTime) : "00:00"}
+                value={shift ? formatTime(shift.endTime) : "00:00"}
                 onChange={e => updateShiftEnd(e.target.value)}
                 className="appearance-none pl-8 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
               />
             </div>
           </div>
         </CardFooter>
-      )}
-    </Card>
-  )
+    );
+  }
 }
