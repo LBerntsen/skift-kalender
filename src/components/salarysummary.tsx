@@ -58,8 +58,8 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
         <div>
             <h2>Timelønnen er {hourRate}kr</h2>
             <h2>Skatteprosenten ligger på {taxRate * 100}%</h2>
-            <h1>Bruttolønn i {monthString} er {salary}kr</h1>
-            <h1>Nettolønn i {monthString} er {salary * (1 - taxRate)}</h1>
+            <h1>Bruttolønn i {monthString} er {salary.toFixed(2)}kr</h1>
+            <h1>Nettolønn i {monthString} er {(salary * (1 - taxRate)).toFixed(2)}</h1>
         </div>
     );
 }
