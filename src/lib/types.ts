@@ -7,6 +7,7 @@ export interface TimeInterval
 export interface Shift
 {
   shiftInterval: TimeInterval;
+  breakInterval: TimeInterval;
 }
 
 export interface ShiftPremium
