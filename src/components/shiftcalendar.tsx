@@ -1,7 +1,7 @@
 "use client"
 
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { nb } from "date-fns/locale"
 import { useState, useEffect } from "react"
 import TimeInput from "./timeinput"
@@ -45,15 +45,15 @@ export default function ShiftCalendar() {
       if(oldShift)
       {
         newShift = structuredClone(oldShift);
-        newShift.startTime = aTime;
+        newShift.shiftInterval.startTime = aTime;
       }
       else
       {
-        newShift = {startTime: aTime, endTime: 0}
+        newShift = {shiftInterval: {startTime: aTime, endTime: 0}, breakInterval: {startTime: 0, endTime: 0}};
       }
 
-      if(newShift.endTime < newShift.startTime)
-        newShift.endTime = newShift.startTime;
+      if(newShift.shiftInterval.endTime < newShift.shiftInterval.startTime)
+        newShift.shiftInterval.endTime = newShift.shiftInterval.startTime;
 
       month.set(getDayKey(), newShift);
       newShifts.set(getMonthKey(), month);
@@ -72,11 +72,61 @@ export default function ShiftCalendar() {
       if(oldShift)
       {
         newShift = structuredClone(oldShift);
-        newShift.endTime = aTime;
+        newShift.shiftInterval.endTime = aTime;
       }
       else
       {
-        newShift = {startTime: 0, endTime: aTime}
+        newShift = {shiftInterval: {startTime: 0, endTime: aTime}, breakInterval: {startTime: 0, endTime: 0}};
+      }
+      month.set(getDayKey(), newShift);
+      newShifts.set(getMonthKey(), month);
+
+      return newShifts;
+    })
+  }
+
+  function updateBreakStart(aTime: number)
+  {
+    setShifts(prev => {
+      const newShifts = new Map(prev);
+      const month = new Map(newShifts.get(getMonthKey()) ?? new Map());
+      const oldShift = month.get(getDayKey());
+      let newShift: Shift;
+      if(oldShift)
+      {
+        newShift = structuredClone(oldShift);
+        newShift.breakInterval.startTime = aTime;
+      }
+      else
+      {
+        newShift = {shiftInterval: {startTime: 0, endTime: 0}, breakInterval: {startTime: aTime, endTime: 0}};
+      }
+
+      if(newShift.breakInterval.endTime < newShift.breakInterval.startTime)
+        newShift.breakInterval.endTime = newShift.breakInterval.startTime;
+
+      month.set(getDayKey(), newShift);
+      newShifts.set(getMonthKey(), month);
+
+      return newShifts;
+    })
+  }
+
+  function updateBreakEnd(aTime: number)
+  {
+    setShifts(prev => {
+      const newShifts = new Map(prev);
+      const month = new Map(newShifts.get(getMonthKey()) ?? new Map());
+      const oldShift = month.get(getDayKey());
+      let newShift: Shift;
+      if(oldShift)
+      {
+        newShift = structuredClone(oldShift);
+        newShift.breakInterval.endTime = aTime;
+      }
+      else
+      {
+        newShift = {shiftInterval: {startTime: 0, endTime: 0}, breakInterval: {startTime: 0, endTime: aTime}};
       }
       month.set(getDayKey(), newShift);
       newShifts.set(getMonthKey(), month);
@@ -98,7 +148,7 @@ export default function ShiftCalendar() {
               return (
                 <CalendarDayButton day={day} modifiers={modifiers} {...props} className="w-20 h-20 p-2">
                   {children}
-                  {(shift && shift.endTime - shift.startTime > 0) && <span>{formatTime(shift.startTime)}-{formatTime(shift.endTime)}</span>}
+                  {(shift && shift.shiftInterval.endTime - shift.shiftInterval.startTime > 0) && <span>{formatTime(shift.shiftInterval.startTime)}-{formatTime(shift.shiftInterval.endTime)}</span>}
                 </CalendarDayButton>
               )
           },
@@ -115,9 +165,15 @@ export default function ShiftCalendar() {
   {
     const shift = getShift(getDayKey());
     return (
-      <CardFooter className="flex flex-row gap-6 border-t px-4 !pt-4">
-        <TimeInput label="Start Time" time={shift ? shift.startTime : 0} setTime={updateShiftStart}/>
-        <TimeInput label="End Time" time={shift ? shift.endTime : 0} setTime={updateShiftEnd}/>
+      <CardFooter className="flex flex-col gap-6 border-t px-4 !pt-4">
+        <div className="flex flex-row gap-6 w-full">
+          <TimeInput gap={2} label="Shift start Time" time={shift ? shift.shiftInterval.startTime : 0} setTime={updateShiftStart}/>
+          <TimeInput gap={2} label="Shift end Time" time={shift ? shift.shiftInterval.endTime : 0} setTime={updateShiftEnd}/>
+        </div>
+        <div className="flex flex-row gap-6 w-full">
+          <TimeInput gap={2} label="Break start Time" time={shift ? shift.breakInterval.startTime : 0} setTime={updateBreakStart}/>
+          <TimeInput gap={2} label="Break end Time" time={shift ? shift.breakInterval.endTime : 0} setTime={updateBreakEnd}/>
+        </div>
       </CardFooter>
     );
   }
