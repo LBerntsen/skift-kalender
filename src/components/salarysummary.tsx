@@ -2,6 +2,8 @@ import { TimeInterval, Shift, ShiftPremium } from "@/lib/types";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { formatTime } from "@/lib/utility";
 
 interface SalarySummaryProps
 {
@@ -70,17 +72,66 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
         setSalary(salary);
     }
 
+    function generateICS()
+    {
+        const header = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ShiftApp//EN
+CALSCALE:GREGORIAN
+`
+
+        const footer = `END:VCALENDAR`;
+
+        let text = header;
+        
+        shifts.forEach((shift, date) => {
+            const dayStamp = month.getFullYear().toString() + month.getMonth().toString();
+            const startTime = formatTime(shift.shiftInterval.startTime).replace(":", "");
+            const endTime = formatTime(shift.shiftInterval.endTime).replace(":", "");
+
+            text += `BEGIN:VEVENT
+UID:shift-${dayStamp}${date}@shiftapp
+DTSTAMP:${dayStamp}${date}T${startTime}00
+DTSTART:${dayStamp}${date}T${startTime}00
+DTEND:${dayStamp}${date}T${endTime}00
+SUMMARY:Vakt
+DESCRIPTION:
+END:VEVENT
+`
+        });
+
+        text += footer;
+
+        return text;
+    }
+
+    function downloadCalendar()
+    {
+        const text = generateICS();
+        const blob = new Blob([text], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "skiftplan.ics";
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+
     useEffect(() => {
         calculateSalary();
-        console.log(shifts)
     }, [shifts, premiums])
 
     return (
-        <div>
-            <h2>Timelønnen er {hourRate}kr</h2>
-            <h2>Skatteprosenten ligger på {taxRate * 100}%</h2>
-            <h1>Bruttolønn i {monthString} er {salary.toFixed(2)}kr</h1>
-            <h1>Nettolønn i {monthString} er {(salary * (1 - taxRate)).toFixed(2)}</h1>
+        <div className="flex justify-between">
+            <div>
+                <h2>Timelønnen er {hourRate}kr</h2>
+                <h2>Skatteprosenten ligger på {taxRate * 100}%</h2>
+                <h1>Bruttolønn i {monthString} er {salary.toFixed(2)}kr</h1>
+                <h1>Nettolønn i {monthString} er {(salary * (1 - taxRate)).toFixed(2)}</h1>
+            </div>
+            <Button onClick={downloadCalendar}>Last ned i kalender</Button>
         </div>
     );
 }
