@@ -34,17 +34,37 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
         return (aInterval.endTime - aInterval.startTime) / 60;
     }
 
+    function calculateSalaryFromInterval(aShiftInterval: TimeInterval, aDate: number)
+    {
+        let salary = 0;
+
+        salary += getHoursFromInterval(aShiftInterval) * hourRate;
+
+        month.setDate(aDate);
+        premiums.get(month.getDay())?.forEach((premium) => {
+            salary += getHoursFromInterval(calculateOverlap(aShiftInterval, premium.interval)) * premium.premium;
+        })
+
+        return salary;
+    }
+
     function calculateSalary()
     {
         let salary = 0;
 
         shifts.forEach((shift, date) => {
-            salary += getHoursFromInterval(shift.shiftInterval) * hourRate;
+            if(getHoursFromInterval(shift.breakInterval) > 0)
+            {
+                const firstInterval: TimeInterval = {startTime: shift.shiftInterval.startTime, endTime: shift.breakInterval.startTime};
+                const secondInterval: TimeInterval = {startTime: shift.breakInterval.endTime, endTime: shift.shiftInterval.endTime};
 
-            month.setDate(date);
-            premiums.get(month.getDay())?.forEach((premium) => {
-                salary += getHoursFromInterval(calculateOverlap(shift.shiftInterval, premium.interval)) * premium.premium;
-            });
+                salary += calculateSalaryFromInterval(firstInterval, date);
+                salary += calculateSalaryFromInterval(secondInterval, date);
+            }
+            else
+            {
+                salary += calculateSalaryFromInterval(shift.shiftInterval, date);
+            }
         });
 
         setSalary(salary);
@@ -52,6 +72,7 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
 
     useEffect(() => {
         calculateSalary();
+        console.log(shifts)
     }, [shifts, premiums])
 
     return (
