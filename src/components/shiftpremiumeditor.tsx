@@ -1,6 +1,6 @@
 import { addDays, eachDayOfInterval, format, parse, startOfISOWeek } from "date-fns";
 import { nb } from "date-fns/locale";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import TimeInput from "./timeinput";
@@ -27,7 +27,7 @@ export default function ShiftPremiumEditor({premiums, setPremiums}: ShiftPremium
         const newMap = new Map(prev);
         const existing = newMap.get(currentDay) ?? [];
 
-        newMap.set(currentDay, [...existing, {shift: {startTime: 0, endTime: 0}, premium: 0}]);
+        newMap.set(currentDay, [...existing, {interval: {startTime: 0, endTime: 0}, premium: 0}]);
         return newMap;
       });
     }
@@ -40,8 +40,8 @@ export default function ShiftPremiumEditor({premiums, setPremiums}: ShiftPremium
 
         const updatedArray = [...existing];
         const updatedItem = {...updatedArray[aIndex]};
-        const updatedShift = {...updatedItem.shift, startTime: aTime};
-        updatedItem.shift = updatedShift;
+        const updatedInterval = {...updatedItem.interval, startTime: aTime};
+        updatedItem.interval = updatedInterval;
         updatedArray[aIndex] = updatedItem;
 
         newMap.set(currentDay, updatedArray);
@@ -57,8 +57,8 @@ export default function ShiftPremiumEditor({premiums, setPremiums}: ShiftPremium
 
         const updatedArray = [...existing];
         const updatedItem = {...updatedArray[aIndex]};
-        const updatedShift = {...updatedItem.shift, endTime: aTime};
-        updatedItem.shift = updatedShift;
+        const updatedInterval = {...updatedItem.interval, endTime: aTime};
+        updatedItem.interval = updatedInterval;
         updatedArray[aIndex] = updatedItem;
 
         newMap.set(currentDay, updatedArray);
@@ -116,8 +116,8 @@ export default function ShiftPremiumEditor({premiums, setPremiums}: ShiftPremium
                 <TabsContent value={getDayOfWeekString(day)} key={day.toString()} className="flex flex-col gap-4">
                   {premiums.get(day.getDay())?.map((premium, index) =>
                     <div className="flex justify-between gap-4" key={index}>
-                      <TimeInput label="Fra" time={premium.shift.startTime} setTime={(time) => {onPremiumStartTimeChanged(time, index)}} gap={1}/>
-                      <TimeInput label="Til" time={premium.shift.endTime} setTime={(time) => {onPremiumEndTimeChanged(time, index)}} gap={1}/>
+                      <TimeInput label="Fra" time={premium.interval.startTime} setTime={(time) => {onPremiumStartTimeChanged(time, index)}} gap={1}/>
+                      <TimeInput label="Til" time={premium.interval.endTime} setTime={(time) => {onPremiumEndTimeChanged(time, index)}} gap={1}/>
                       <NumberInput label="Tillegg" value={premium.premium} setValue={(premium) => {onPremiumChanged(premium, index)}} gap={1}/>
                     </div>
                   )}

@@ -1,4 +1,4 @@
-import { Shift, ShiftPremium } from "@/lib/types";
+import { TimeInterval, Shift, ShiftPremium } from "@/lib/types";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 import { useEffect, useState } from "react";
@@ -18,7 +18,7 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
 
     const monthString = format(month, "MMMM", {locale: nb});
 
-    function calculateOverlap(aShift: Shift, aPremium: Shift): Shift
+    function calculateOverlap(aShift: TimeInterval, aPremium: TimeInterval): TimeInterval
     {
         let startTime = Math.max(aShift.startTime, aPremium.startTime);
         let endTime = Math.min(aShift.endTime, aPremium.endTime);
@@ -29,9 +29,9 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
         return {startTime: startTime, endTime: endTime};
     }
 
-    function getHoursFromShift(aShift: Shift)
+    function getHoursFromInterval(aInterval: TimeInterval)
     {
-        return (aShift.endTime - aShift.startTime) / 60;
+        return (aInterval.endTime - aInterval.startTime) / 60;
     }
 
     function calculateSalary()
@@ -39,11 +39,11 @@ export default function SalarySummary({month, shifts, premiums}: SalarySummaryPr
         let salary = 0;
 
         shifts.forEach((shift, date) => {
-            salary += getHoursFromShift(shift) * hourRate;
+            salary += getHoursFromInterval(shift.shiftInterval) * hourRate;
 
             month.setDate(date);
             premiums.get(month.getDay())?.forEach((premium) => {
-                salary += getHoursFromShift(calculateOverlap(shift, premium.shift)) * premium.premium;
+                salary += getHoursFromInterval(calculateOverlap(shift.shiftInterval, premium.interval)) * premium.premium;
             });
         });
 

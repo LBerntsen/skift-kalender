@@ -1,11 +1,16 @@
-export interface Shift
+export interface TimeInterval
 {
   startTime: number;
   endTime: number;
 }
 
+export interface Shift
+{
+  shiftInterval: TimeInterval;
+}
+
 export interface ShiftPremium
 {
-  shift: Shift;
+  interval: TimeInterval;
   premium: number;
 }
