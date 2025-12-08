@@ -54,6 +54,20 @@ struct CalendarView : View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .padding()
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        currentDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate)!
+                        calendarGrid = generateCalendarGrid(for: currentDate)
+                        selectedNumber = -1
+                    } else if value.translation.width > 50 {
+                        currentDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate)!
+                        calendarGrid = generateCalendarGrid(for: currentDate)
+                        selectedNumber = -1
+                    }
+                }
+        )
     }
     
     private func generateCalendarGrid(for date: Date) -> [[Int?]] {
