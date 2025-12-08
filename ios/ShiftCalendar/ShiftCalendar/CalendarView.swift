@@ -18,6 +18,8 @@ struct CalendarView : View {
     @State private var calendarGrid: [[Int?]] = [] // 2D array where each row is a week
     @State private var currentDate = Date()
     
+    @State private var selectedNumber = -1
+    
     var body: some View {
         VStack(spacing: 10) {
             Text(currentDate.formatted(.dateTime.month(.wide).locale(Locale.init(identifier: "no_NO"))))
@@ -38,7 +40,11 @@ struct CalendarView : View {
                     ForEach(calendarGrid[row].indices, id: \.self) { col in
                         let day = calendarGrid[row][col]
                         
-                        CalendarCellView(day: day)
+                        CalendarCellView(day: day, isSelected: selectedNumber == day, onTap: {
+                            if let realDay = day {
+                                selectedNumber = realDay
+                            }
+                        })
                     }
                 }
             }
@@ -72,13 +78,16 @@ struct CalendarView : View {
 
 struct CalendarCellView : View {
     let day: Int?
+    let isSelected: Bool
+    let onTap: () -> Void
     
     var body: some View {
         if let realDay = day {
             Text(realDay.formatted())
                 .frame(maxWidth: .infinity, minHeight: 60)
-                .background(Color.blue.opacity(0.2))
+                .background(isSelected ? Color.blue : Color.blue.opacity(0.2))
                 .cornerRadius(8)
+                .onTapGesture(perform: onTap)
         } else {
             Text("")
                 .frame(maxWidth: .infinity, minHeight: 60)
