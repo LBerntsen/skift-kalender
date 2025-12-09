@@ -8,14 +8,22 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var hourlyWage = 50.0
+    @State private var taxPercentage = 0.4
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            CalendarView(hourlyWage: $hourlyWage, taxPercentage: $taxPercentage)
+                .tabItem {
+                    Label("Kalender", systemImage: "calendar")
+                }
+            
+            SalarySettingsView(hourlyWage: $hourlyWage, taxPercentage: $taxPercentage)
+                .tabItem {
+                    Label("Lønn", systemImage: "dollarsign.circle")
+                }
         }
-        .padding()
+
     }
 }
 

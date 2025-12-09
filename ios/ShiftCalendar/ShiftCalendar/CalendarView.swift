@@ -24,8 +24,44 @@ struct CalendarView : View {
     
     @State private var shifts: [String: [Int: Shift]] = [:]
     
+    @Binding var hourlyWage: Double
+    @Binding var taxPercentage: Double
+    
+    private var grossSalary: Double {
+        hourlyWage * 10
+    }
+    
+    private var netSalary: Double {
+        grossSalary * (1 - taxPercentage)
+    }
+    
     var body: some View {
         VStack(spacing: 10) {
+            // Salary summary
+            HStack(spacing: 100) {
+                VStack(alignment: .leading) {
+                    Text("Brutto")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(grossSalary.formatted(.currency(code: "NOK")))
+                        .font(.title3)
+                        .bold()
+                }
+                
+                VStack(alignment: .trailing) {
+                    Text("Netto")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(netSalary.formatted(.currency(code: "NOK")))
+                        .font(.title3)
+                        .bold()
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+            
+            // Current month
             Text(currentDate.formatted(.dateTime.month(.wide).locale(Locale.init(identifier: "no_NO"))))
                 .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -168,5 +204,7 @@ struct CalendarCellView : View {
 }
 
 #Preview {
-    CalendarView()
+    @Previewable @State var wage = 50.0
+    @Previewable @State var tax = 0.3
+    CalendarView(hourlyWage: $wage, taxPercentage: $tax)
 }
