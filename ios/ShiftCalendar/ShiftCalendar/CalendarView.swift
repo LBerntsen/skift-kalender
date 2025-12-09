@@ -19,6 +19,10 @@ struct CalendarView : View {
     @State private var currentDate = Date()
     
     @State private var selectedNumber = -1
+    @State private var showEditor = false
+    @State private var tempShift = Shift.default
+    
+    @State private var shifts: [String: [Int: Shift]] = [:]
     
     var body: some View {
         VStack(spacing: 10) {
@@ -40,11 +44,19 @@ struct CalendarView : View {
                     ForEach(calendarGrid[row].indices, id: \.self) { col in
                         let day = calendarGrid[row][col]
                         
-                        CalendarCellView(day: day, isSelected: selectedNumber == day, onTap: {
-                            if let realDay = day {
+                        if let realDay = day {
+                            let shift = getShift(day: realDay)
+                            
+                            CalendarCellView(day: realDay, isSelected: selectedNumber == day, shift: shift, onTap: {
                                 selectedNumber = realDay
-                            }
-                        })
+                                showEditor = true
+                                
+                                tempShift = shift ?? Shift.default
+                            })
+                        } else {
+                            Text("")
+                                .frame(maxWidth: .infinity, minHeight: 60)
+                        }
                     }
                 }
             }
@@ -60,14 +72,37 @@ struct CalendarView : View {
                     if value.translation.width < -50 {
                         currentDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate)!
                         calendarGrid = generateCalendarGrid(for: currentDate)
-                        selectedNumber = -1
                     } else if value.translation.width > 50 {
                         currentDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate)!
                         calendarGrid = generateCalendarGrid(for: currentDate)
-                        selectedNumber = -1
                     }
                 }
         )
+        .sheet(isPresented: $showEditor, onDismiss: closeAndResetEditor) {
+            NavigationStack {
+                ShiftEditorView(shift: $tempShift)
+                    .navigationTitle("Endre vakt")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .bottomBar) {
+                            Button("Lagre endringer") {
+                                if(getDurationBetweenTimeIntervals(startTime: tempShift.shiftInterval.startTime, endTime: tempShift.shiftInterval.endTime).minutesSinceMidnight > 0) {
+                                    if(shifts[getMonthKey()] == nil) {
+                                        shifts[getMonthKey()] = [:]
+                                    }
+                                    
+                                    shifts[getMonthKey()]![selectedNumber] = tempShift
+                                    tempShift = Shift.default
+                                }
+                                
+                                showEditor = false
+                                selectedNumber = -1
+                            }
+                            .disabled(!tempShift.isValid)
+                        }
+                    }
+            }
+        }
     }
     
     private func generateCalendarGrid(for date: Date) -> [[Int?]] {
@@ -88,24 +123,47 @@ struct CalendarView : View {
         
         return stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<$0+7]) }
     }
+    
+    private func getMonthKey() -> String
+    {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: currentDate)
+        
+        let month = components.month ?? -1
+        let year = components.year ?? -1
+        
+        return "\(month)\(year)"
+    }
+    
+    private func getShift(day: Int) -> Shift? {
+        return shifts[getMonthKey()]?[day]
+    }
+    
+    private func closeAndResetEditor() {
+        showEditor = false
+        selectedNumber = -1
+        tempShift = Shift.default
+    }
 }
 
 struct CalendarCellView : View {
-    let day: Int?
+    let day: Int
     let isSelected: Bool
+    let shift: Shift?
     let onTap: () -> Void
     
     var body: some View {
-        if let realDay = day {
-            Text(realDay.formatted())
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .background(isSelected ? Color.blue : Color.blue.opacity(0.2))
-                .cornerRadius(8)
-                .onTapGesture(perform: onTap)
-        } else {
-            Text("")
-                .frame(maxWidth: .infinity, minHeight: 60)
+        VStack {
+            Text(day.formatted())
+            if let s = shift {
+                Text("\(s.shiftInterval.startTime.formatted(.dateTime.hour().minute())) - \(s.shiftInterval.endTime.formatted(.dateTime.hour().minute()))")
+                    .font(.caption2)
+            }
         }
+        .frame(maxWidth: .infinity, minHeight: 60)
+        .background(isSelected ? Color.blue : Color.blue.opacity(0.2))
+        .cornerRadius(8)
+        .onTapGesture(perform: onTap)
     }
 }
 
