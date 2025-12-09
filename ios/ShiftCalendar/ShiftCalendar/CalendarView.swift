@@ -28,7 +28,15 @@ struct CalendarView : View {
     @Binding var taxPercentage: Double
     
     private var grossSalary: Double {
-        hourlyWage * 10
+        var totalHours: Double = 0
+        
+        if let monthShifts = shifts[getMonthKey()] {
+            for shift in monthShifts.values {
+                totalHours += Double(shift.shiftInterval.duration / 60)
+            }
+        }
+        
+        return totalHours * hourlyWage
     }
     
     private var netSalary: Double {
@@ -197,7 +205,7 @@ struct CalendarCellView : View {
             }
         }
         .frame(maxWidth: .infinity, minHeight: 60)
-        .background(isSelected ? Color.blue : Color.blue.opacity(0.2))
+        .background(isSelected ? Color.accentColor : Color.secondary)
         .cornerRadius(8)
         .onTapGesture(perform: onTap)
     }
