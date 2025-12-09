@@ -32,7 +32,12 @@ struct CalendarView : View {
         
         if let monthShifts = shifts[getMonthKey()] {
             for shift in monthShifts.values {
-                totalHours += Double(shift.shiftInterval.duration / 60)
+                if (shift.breakInterval.duration > 0) {
+                    totalHours += Double(TimeRange(startTime: shift.shiftInterval.startTime, endTime: shift.breakInterval.startTime).duration / 60)
+                    totalHours += Double(TimeRange(startTime: shift.breakInterval.endTime, endTime: shift.shiftInterval.endTime).duration / 60)
+                } else {
+                    totalHours += Double(shift.shiftInterval.duration / 60)
+                }
             }
         }
         
